@@ -54,8 +54,6 @@ double calculateErea(struct polygon* iPolyPtr);
 
 void decodeAndExecute(long long opCode);
 
-void execute(bool iActiveFun[], short iSelectedPoly);
-
 void (*func[FUNCTION_NUM])(struct polygon* ) = {
 	add_polygon,
 	print_polygon,
@@ -147,24 +145,6 @@ bool isInSelectedGroup(struct polygon* iPoly, short iCon) {
 	return res;
 }
 
-void execute(bool iActiveFun[], short iSelectedPoly) {
-	struct Node* node = LIST_HEAD;
-	while (node) {
-		struct polygon* currPoly = node->poly;
-		if (currPoly->type == iSelectedPoly || iSelectedPoly == 0b01111) {
-			for (int i = 0; i < FUNCTION_NUM; i++) {
-				if (iActiveFun[i]) { func[i](LIST_HEAD); }
-			}
-		}
-		else if (iSelectedPoly == 0) {
-			for (int i = 0; i < FUNCTION_NUM; i++) {
-				if (iActiveFun[i]) { func[i](LIST_TAIL); }
-			}
-		}
-		node->next;
-	}
-}
-
 void add_polygon(struct polygon* iPolyPtr) {
 	struct polygon* newPolygon = (struct polygon*)malloc(sizeof(struct polygon));
 	newPolygon->type = NEW_POLLY_TYPE;
@@ -217,17 +197,16 @@ double calculatePerimeter(struct polygon* iPolyPtr) {
 
 double calculateDiagonals(struct polygon* iPolyPtr) {
 	struct PointNode* pointOneNode = iPolyPtr->vertices;
-	struct PointNode* pointTwoNode = iPolyPtr->vertices->next->next;
 	double res = 0;
-	for (int i = 0; i < iPolyPtr->type / 2; i++) {
-		struct PointNode* point = pointTwoNode;
-		for (int j = 0; j < iPolyPtr->type - 3; j++) {
-			res += distanceBetweenTwoPoints(*pointOneNode->point, *point->point);
-			point = point->next;
+	for (int i = 0; i < iPolyPtr->type; i++) {
+		struct PointNode* pointOneTwo = pointOneNode->next;
+		for (int j = i + 1; j < iPolyPtr->type; j++) {
+			res += distanceBetweenTwoPoints(*pointOneNode->point, *pointOneTwo->point);
+			pointOneTwo = pointOneTwo->next;
 		}
 		pointOneNode = pointOneNode->next;
-		pointTwoNode = pointTwoNode->next;
 	}
+	res = res - calculatePerimeter(iPolyPtr);
 	return res;
 }
 
